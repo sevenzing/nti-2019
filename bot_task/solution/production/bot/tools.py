@@ -1,0 +1,61 @@
+import re
+import mongotools
+import BotAssistant
+import telegramtools
+import messages
+import tools
+import configtools
+
+
+def bot_was_mentioned(message):
+    if message.text is None:
+        return False
+    return configtools.BOT_ALIAS in message.text
+
+def get_aliases(text):
+    return re.findall(r'@\w+', text)
+
+
+def process_update(db, message, _type):
+    """
+    Returns a message to send to the user 
+    in response to a command or text
+    """
+
+    if not mongotools.user_in_database(db, message.from_user.username):
+        user = mongotools.create_new_user(db, mongotools.normalize_alias(message.from_user.username))
+    else:
+        user = mongotools.get_user(db, message.from_user.username)
+
+    state = user['state']
+    
+    botAssistant = BotAssistant.BotAssistant(state)
+
+    # TODO: in_a_chat instead of True
+    text_to_send = botAssistant.action(db, message, True, _type=_type)
+    if state != botAssistant.get_state():
+        mongotools.update(db, message.from_user.username, state=botAssistant.get_state()) 
+    return text_to_send
+    
+
+def get_real_name(db, message):
+    """
+    Returns the message to send to the user
+    """
+    user_from = mongotools.get_user(db, message.from_user.username) 
+    if user_from is None:
+        return messages.ADDED_TO_CHAT % configtools.BOT_ALIAS
+    elif user_from['state'] in [0, 1, 2]:
+        return messages.ADDED_TO_CHAT % configtools.BOT_ALIAS
+
+
+    alias = tools.get_aliases(message.text)[0]
+    user = mongotools.get_user(db, alias)
+    
+    if user is None:
+        return messages.THERE_IS_NO_SUCH_USER % alias
+    elif user['state'] in [0, 1, 2]:
+        return messages.THERE_IS_NO_SUCH_USER % alias
+    else:
+        first_name, second_name = user['name'], user['surname']
+        return messages.SEND_REAL_NAME % (alias, first_name, second_name)
