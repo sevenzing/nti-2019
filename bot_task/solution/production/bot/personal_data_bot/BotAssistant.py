@@ -1,5 +1,5 @@
-import messages
-import mongotools
+from . import messages
+from . import mongotools
 
 from telebot.types import Message
 
@@ -34,20 +34,21 @@ class BotAssistant:
                     self.state = 1
                     return messages.SEND_NAME
                 elif content == '/help':
-                    return messages.HELP_MESSAGE
+                    return messages.HELP_MESSAGE    
+
 
             return messages.SEE_HELP
             
         elif self.state == 1:
             if _type == 'text':
-                mongotools.update(db, message.from_user.username, name=content)
+                mongotools.update_user(db, message.from_user.id, name=content)
                 self.state = 2
                 return messages.SEND_SURNAME
             return messages.SEND_NAME
                 
         elif self.state == 2:
             if _type == 'text':
-                mongotools.update(db, message.from_user.username, surname=content)
+                mongotools.update_user(db, message.from_user.id, surname=content)
                 self.state = 3
                 return messages.REGISTER_FINISH
             return messages.SEND_SURNAME

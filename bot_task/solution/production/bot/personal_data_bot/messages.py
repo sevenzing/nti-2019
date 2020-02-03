@@ -19,3 +19,5 @@ HELP_MESSAGE = "/register - to register yourself and /remove to un-register your
 ARE_YOU_SURE = "Are you sure? \nyes/no"
 
 THERE_IS_NO_SUCH_USER = "User %s has not registered personal data yet"
+
+USER_NOT_IN_THIS_CHAT = "User %s is not in this chat."

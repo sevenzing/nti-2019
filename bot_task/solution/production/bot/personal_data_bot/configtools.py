@@ -2,6 +2,7 @@ import configparser
 CONFIG_NAME = "Bot settings" 
 PATH = "../bot.config"
 
+
 def readConfig(path, name):
     values = {"telegram_webhook_url": None,
             "bot_alias": None,
