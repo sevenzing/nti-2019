@@ -1,11 +1,14 @@
 import re
-import mongotools
-import BotAssistant
-import telegramtools
-import messages
-import tools
-import configtools
+from . import mongotools
+from . import BotAssistant
+from . import telegramtools
+from . import messages
+from . import tools
+from . import configtools
 
+
+def in_private_message(message):
+    return message.chat.id == message.from_user.id
 
 def bot_was_mentioned(message):
     if message.text is None:
@@ -23,7 +26,8 @@ def process_update(db, message, _type):
     """
 
     if not mongotools.user_in_database(db, message.from_user.username):
-        user = mongotools.create_new_user(db, mongotools.normalize_alias(message.from_user.username))
+        user = mongotools.create_new_user(db, message.chat.id, mongotools.normalize_alias(message.from_user.username))
+        return messages.START_BOT
     else:
         user = mongotools.get_user(db, message.from_user.username)
 
@@ -34,15 +38,18 @@ def process_update(db, message, _type):
     # TODO: in_a_chat instead of True
     text_to_send = botAssistant.action(db, message, True, _type=_type)
     if state != botAssistant.get_state():
-        mongotools.update(db, message.from_user.username, state=botAssistant.get_state()) 
+        mongotools.update_user(db, message.from_user.id, state=botAssistant.get_state()) 
     return text_to_send
     
 
-def get_real_name(db, message):
+def try_get_real_name(db, bot, message):
     """
     Returns the message to send to the user
     """
+
     user_from = mongotools.get_user(db, message.from_user.username) 
+    
+    # IF USER_FROM NOT IN DATABASE
     if user_from is None:
         return messages.ADDED_TO_CHAT % configtools.BOT_ALIAS
     elif user_from['state'] in [0, 1, 2]:
@@ -52,10 +59,18 @@ def get_real_name(db, message):
     alias = tools.get_aliases(message.text)[0]
     user = mongotools.get_user(db, alias)
     
+    # IF USER_TO NOT IN DATABASE
     if user is None:
         return messages.THERE_IS_NO_SUCH_USER % alias
     elif user['state'] in [0, 1, 2]:
         return messages.THERE_IS_NO_SUCH_USER % alias
-    else:
+    
+    # IF USER_TO IS IN THIS CHAT
+    print(message.chat.id, user['chat_id'])
+    if telegramtools.user_in_chat(bot, message.chat.id, user['chat_id']):
         first_name, second_name = user['name'], user['surname']
         return messages.SEND_REAL_NAME % (alias, first_name, second_name)
+    
+    # IF USER_TO ISN'T IN THIS CHAT
+    else:
+        return messages.USER_NOT_IN_THIS_CHAT % alias

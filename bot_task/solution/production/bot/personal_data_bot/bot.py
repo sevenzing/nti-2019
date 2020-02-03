@@ -1,16 +1,13 @@
 import os
-from flask import Flask, request
 import telebot
 
-import messages
-import telegramtools
-from configtools import TELEGRAM_WEBHOOK_URL, BOT_ALIAS, BOT_TOKEN, BOT_PORT, BOT_URL
-import tools
-import mongotools
+from . import messages
+from . import telegramtools
+from .configtools import TELEGRAM_WEBHOOK_URL, BOT_ALIAS, BOT_TOKEN, BOT_PORT, BOT_URL
+from . import tools
+from . import mongotools
 
 bot = telebot.TeleBot(BOT_TOKEN)
-server = Flask(__name__)
-    
 
 @bot.message_handler(regexp=r'real\s+name\s+of\s+@\w+', func=lambda message: len(message.text.split())==4)
 def get_real_name(message):
@@ -18,7 +15,7 @@ def get_real_name(message):
     User sent "real name of @..."
     """
 
-    text_to_send = tools.get_real_name(db, message)
+    text_to_send = tools.try_get_real_name(db, bot, message)
     telegramtools.answer(bot, message, text_to_send)
 
 
@@ -43,7 +40,7 @@ def send_register_message(message):
      
 
 @bot.message_handler(commands=['start', 'register', 'remove', 'help'], 
-                     func=lambda m: m.chat.id == m.from_user.id)
+                     func=tools.in_private_message)
 def process_commands(message):
     """
     User sent a command in bot's private message 
@@ -54,7 +51,7 @@ def process_commands(message):
 
 
 @bot.message_handler(content_types=['text'], 
-                     func=lambda m: m.chat.id == m.from_user.id)
+                     func=tools.in_private_message)
 def process_text(message):
     """
     User sent text in bot's private message
@@ -64,15 +61,18 @@ def process_text(message):
     telegramtools.answer(bot, message, text_to_send)
 
 
-@server.route('/', methods=['POST'])
-def get_message():
-    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode('utf-8'))])
-    return '', 200
 
+# TODO: switch to webhook
 
-if __name__ == '__main__':
-    bot.remove_webhook()
-    # bot.set_webhook(url=BOT_URL)
-    # server.run(host="0.0.0.0", port=int(BOT_PORT))
-    db = mongotools.get_db()
-    bot.polling()
+print('==========================')
+print(f'Hello from @{bot.get_me().username}!')
+print('==========================')
+
+bot.remove_webhook()
+
+print('[INFO] >> Removed webhook\n')
+# bot.set_webhook(url=BOT_URL)
+db = mongotools.get_db()
+print('[INFO] >> Database has been attached\n')
+print('[INFO] >> Starting polling ...\n')
+bot.polling()
