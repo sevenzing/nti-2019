@@ -15,6 +15,7 @@ def bot_was_mentioned(message):
         return False
     return configtools.BOT_ALIAS in message.text
 
+
 def get_aliases(text):
     return re.findall(r'@\w+', text)
 
@@ -36,7 +37,7 @@ def process_update(db, message, _type):
     botAssistant = BotAssistant.BotAssistant(state)
 
     # TODO: in_a_chat instead of True
-    text_to_send = botAssistant.action(db, message, True, _type=_type)
+    text_to_send = botAssistant.action(db, message, _type=_type)
     if state != botAssistant.get_state():
         mongotools.update_user(db, message.from_user.id, state=botAssistant.get_state()) 
     return text_to_send

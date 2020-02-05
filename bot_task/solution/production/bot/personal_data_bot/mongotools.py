@@ -2,10 +2,9 @@ import pymongo
 
 
 def get_db():
-    #client = pymongo.MongoClient('mongodb://root:password@mongo:27017/')
-    #db = client.nti
-    client = pymongo.MongoClient('mongodb://heroku_2n5xgpck:hfoqb10p4b1968cv42nbrsrlef@ds031359.mlab.com:31359/heroku_2n5xgpck?retryWrites=false')
-    db = client.heroku_2n5xgpck
+    client = pymongo.MongoClient('mongodb://root:password@mongo:27017/')
+    db = client.nti
+
     return db.personal_data_bot
 
 
