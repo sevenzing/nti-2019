@@ -4,7 +4,10 @@ from . import mongotools
 from telebot.types import Message
 
 class BotAssistant:
-    
+    """
+    FSM for bot
+    """
+
     def __init__(self, state):
         """
         State:
@@ -16,16 +19,12 @@ class BotAssistant:
         """
         self.state = state
     
-    def action(self, db, message: Message, in_a_chat: bool, _type='text'):
+    def action(self, db, message: Message, _type='text'):
         """
         Type can be either text or command
         
         Returns message, that the bot have to send to the user
         """
-
-        if not in_a_chat:
-            self.state = 0
-            return messages.NOT_IN_A_CHAT 
 
         content = message.text
         if self.state == 0:
@@ -71,7 +70,7 @@ class BotAssistant:
                     return messages.START_BOT
                 if content in ['No', 'no']:
                     self.state = 3
-                    return "Okey"
+                    return messages.USER_CHANGED_HIS_MIND
             return messages.ARE_YOU_SURE
 
 

@@ -3,7 +3,7 @@ import telebot
 
 from . import messages
 from . import telegramtools
-from .configtools import TELEGRAM_WEBHOOK_URL, BOT_ALIAS, BOT_TOKEN, BOT_PORT, BOT_URL
+from .configtools import BOT_ALIAS, BOT_TOKEN, BOT_URL
 from . import tools
 from . import mongotools
 
@@ -61,18 +61,19 @@ def process_text(message):
     telegramtools.answer(bot, message, text_to_send)
 
 
-
-# TODO: switch to webhook
-
 print('==========================')
 print(f'Hello from @{bot.get_me().username}!')
 print('==========================')
 
-bot.remove_webhook()
-
+bot.delete_webhook()
 print('[INFO] >> Removed webhook\n')
-# bot.set_webhook(url=BOT_URL)
 db = mongotools.get_db()
 print('[INFO] >> Database has been attached\n')
+
+# Uncomment this to switch the bot to the polling
+# Comment this to swith the bot to the webhook
 print('[INFO] >> Starting polling ...\n')
 bot.polling()
+
+
+bot.set_webhook(url=BOT_URL)
